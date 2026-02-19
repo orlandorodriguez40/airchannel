@@ -1,26 +1,43 @@
-name: Airchannel Build & Release
+name: Flutter Build CI
 
 on:
   push:
-    branches: [ "main" ] # Se activa cada vez que subes algo a la rama main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v4 # Actualizado de v3 a v4
+
+      - name: Install Java
+        uses: actions/setup-java@v4 # Actualizado de v3 a v4
         with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
           channel: 'stable'
-      
-      - name: Install dependencies
+
+      - name: Get dependencies
         run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+      - name: Build AppBundle (AAB)
+        run: flutter build appbundle --release
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4 # <--- ESTE ERA EL ERROR (Actualizado de v3 a v4)
         with:
-          name: airchannel-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: release-assets
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
