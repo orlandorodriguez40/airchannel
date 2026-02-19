@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'dart:developer' as dev;
+import 'package:provider/provider.dart';
+import '../providers/filter_provider.dart';
 import '../utils/app_colors.dart';
-import '../services/api_service.dart';
 import '../models/location_model.dart';
-import '../models/propiedad_model.dart'; // Nuevo
-import 'results_screen.dart'; // Nuevo
+import '../models/propiedad_model.dart';
+import 'results_screen.dart';
 
 class FilterScreen extends StatefulWidget {
   const FilterScreen({super.key});
@@ -14,91 +14,15 @@ class FilterScreen extends StatefulWidget {
 }
 
 class _FilterScreenState extends State<FilterScreen> {
-  final ApiService _apiService = ApiService();
-
-  // --- CONTROLADORES PARA PRECIOS ---
   final TextEditingController _minPriceController = TextEditingController();
   final TextEditingController _maxPriceController = TextEditingController();
-
-  // --- VARIABLES DE SELECCIÓN ---
-  LocationItem? selectedPais;
-  LocationItem? selectedEstado;
-  LocationItem? selectedCiudad;
-  LocationItem? selectedMunicipio;
-  LocationItem? selectedUrbanizacion;
-  LocationItem? selectedTipo;
-  LocationItem? selectedOperacion;
-
-  // --- LISTAS PARA LLENAR LOS DROPDOWNS ---
-  List<LocationItem> paises = [];
-  List<LocationItem> estados = [];
-  List<LocationItem> ciudades = [];
-  List<LocationItem> municipios = [];
-  List<LocationItem> urbanizaciones = [];
-  List<LocationItem> tiposPropiedad = [];
-  List<LocationItem> operaciones = [];
 
   @override
   void initState() {
     super.initState();
-    _cargarDatosIniciales();
-  }
-
-  void _cargarDatosIniciales() async {
-    try {
-      final results = await Future.wait([
-        _apiService.fetchData('paises'),
-        _apiService.fetchData('tipo_propiedades'),
-        _apiService.fetchData('operaciones'),
-      ]);
-
-      setState(() {
-        paises = results[0];
-        tiposPropiedad = results[1];
-        operaciones = results[2];
-      });
-    } catch (e) {
-      dev.log(
-        "Error cargando datos iniciales",
-        error: e,
-        name: "Airchannel.Filtros",
-      );
-    }
-  }
-
-  // --- FUNCIONES DE CARGA EN CASCADA ---
-  void _cargarEstados(int id) async {
-    var data = await _apiService.fetchData('estados/$id');
-    setState(() {
-      estados = data;
-      selectedEstado = null;
-      selectedCiudad = null;
-    });
-  }
-
-  void _cargarCiudades(int id) async {
-    var data = await _apiService.fetchData('ciudades/$id');
-    setState(() {
-      ciudades = data;
-      selectedCiudad = null;
-      selectedMunicipio = null;
-    });
-  }
-
-  void _cargarMunicipios(int id) async {
-    var data = await _apiService.fetchData('municipios/$id');
-    setState(() {
-      municipios = data;
-      selectedMunicipio = null;
-      selectedUrbanizacion = null;
-    });
-  }
-
-  void _cargarUrbanizaciones(int id) async {
-    var data = await _apiService.fetchData('urbanizaciones/$id');
-    setState(() {
-      urbanizaciones = data;
-      selectedUrbanizacion = null;
+    // Carga inicial de datos desde las APIs de Pais, Tipo y Operación
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<FilterProvider>().cargarConfiguracionInicial();
     });
   }
 
@@ -111,90 +35,101 @@ class _FilterScreenState extends State<FilterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filterProv = context.watch<FilterProvider>();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Airchannel - Filtros',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        elevation: 0,
+        title: const Text('Airchannel - Filtros'),
+        backgroundColor: AppColors.primaryBlue,
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Encuentra tu inmueble",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
-              ),
+            // 1. PAÍS
+            _buildDropdown(
+              "País",
+              filterProv.paises,
+              filterProv.selectedPais,
+              (val) => filterProv.setPais(val),
             ),
-            const SizedBox(height: 20),
 
-            _buildDropdown("País", paises, selectedPais, (val) {
-              setState(() => selectedPais = val);
-              if (val != null) _cargarEstados(val.id);
-            }),
+            // 2. ESTADO
+            _buildDropdown(
+              "Estado",
+              filterProv.estados,
+              filterProv.selectedEstado,
+              (val) => filterProv.setEstado(val),
+            ),
 
-            _buildDropdown("Estado", estados, selectedEstado, (val) {
-              setState(() => selectedEstado = val);
-              if (val != null) _cargarCiudades(val.id);
-            }),
+            // 3. CIUDAD
+            _buildDropdown(
+              "Ciudad",
+              filterProv.ciudades,
+              filterProv.selectedCiudad,
+              (val) => filterProv.setCiudad(val),
+            ),
 
-            _buildDropdown("Ciudad", ciudades, selectedCiudad, (val) {
-              setState(() => selectedCiudad = val);
-              if (val != null) _cargarMunicipios(val.id);
-            }),
+            // 4. MUNICIPIO
+            _buildDropdown(
+              "Municipio",
+              filterProv.municipios,
+              filterProv.selectedMunicipio,
+              (val) => filterProv.setMunicipio(val),
+            ),
 
-            _buildDropdown("Municipio", municipios, selectedMunicipio, (val) {
-              setState(() => selectedMunicipio = val);
-              if (val != null) _cargarUrbanizaciones(val.id);
-            }),
-
+            // 5. URBANIZACIÓN
             _buildDropdown(
               "Urbanización",
-              urbanizaciones,
-              selectedUrbanizacion,
-              (val) {
-                setState(() => selectedUrbanizacion = val);
-              },
+              filterProv.urbanizaciones,
+              filterProv.selectedUrbanizacion,
+              (val) => filterProv.setUrbanizacion(val),
             ),
 
-            const Divider(height: 40),
+            const Divider(height: 30),
 
-            _buildDropdown("Tipo de Propiedad", tiposPropiedad, selectedTipo, (
-              val,
-            ) {
-              setState(() => selectedTipo = val);
-            }),
+            // 6. TIPO PROPIEDAD
+            _buildDropdown(
+              "Tipo Propiedad",
+              filterProv.tiposPropiedad,
+              filterProv.selectedTipoPropiedad,
+              (val) => filterProv.setTipoPropiedad(val),
+            ),
 
-            _buildDropdown("Operación", operaciones, selectedOperacion, (val) {
-              setState(() => selectedOperacion = val);
-            }),
+            // 7. OPERACIÓN
+            _buildDropdown(
+              "Operación",
+              filterProv.operaciones,
+              filterProv.selectedOperacion,
+              (val) => filterProv.setOperacion(val),
+            ),
 
-            const SizedBox(height: 20),
+            const Divider(height: 30),
 
-            const Text(
-              "Rango de Precio",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryBlue,
+            // 8 y 9. PRECIOS (Mínimo y Máximo)
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Rango de Precio",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryBlue,
+                ),
               ),
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                _buildPriceField("Mínimo", _minPriceController),
+                _buildPriceField("Precio Mínimo", _minPriceController),
                 const SizedBox(width: 15),
-                _buildPriceField("Máximo", _maxPriceController),
+                _buildPriceField("Precio Máximo", _maxPriceController),
               ],
             ),
 
             const SizedBox(height: 40),
 
+            // BOTÓN MOSTRAR PROPIEDADES
             SizedBox(
               width: double.infinity,
               height: 55,
@@ -202,17 +137,10 @@ class _FilterScreenState extends State<FilterScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
                 onPressed: () {
-                  dev.log(
-                    "Navegando a resultados...",
-                    name: "Airchannel.Filtros",
-                  );
-
-                  // Simulación de datos para probar la pantalla de resultados
-                  // En el futuro, aquí llamarás a tu API de búsqueda real
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -220,16 +148,14 @@ class _FilterScreenState extends State<FilterScreen> {
                         propiedades: [
                           Propiedad(
                             id: 1,
-                            titulo: "Propiedad de Ejemplo",
-                            descripcion: "Esta es una vista previa",
-                            precio: _minPriceController.text.isEmpty
-                                ? "0"
-                                : _minPriceController.text,
+                            titulo: "Resultado de Búsqueda",
+                            descripcion: "Filtros aplicados correctamente",
+                            precio: _minPriceController.text,
                             imagenUrl:
                                 "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2",
                             ciudad:
-                                selectedCiudad?.nombre ??
-                                "Ubicación seleccionada",
+                                filterProv.selectedCiudad?.nombre ??
+                                "Ubicación",
                           ),
                         ],
                       ),
@@ -240,24 +166,23 @@ class _FilterScreenState extends State<FilterScreen> {
                   "MOSTRAR PROPIEDADES",
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
+  // --- WIDGET PARA DROPDOWNS ---
   Widget _buildDropdown(
     String label,
     List<LocationItem> items,
     LocationItem? currentVal,
-    void Function(LocationItem?) onChange,
+    Function(LocationItem?) onChange,
   ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
@@ -268,40 +193,49 @@ class _FilterScreenState extends State<FilterScreen> {
             label,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: AppColors.lightBlue,
+              color: AppColors.primaryBlue,
             ),
           ),
-          DropdownButton<LocationItem>(
-            isExpanded: true,
-            value: currentVal,
-            hint: Text("Seleccione $label"),
-            items: items.map((item) {
-              return DropdownMenuItem<LocationItem>(
-                value: item,
-                child: Text(item.nombre),
-              );
-            }).toList(),
-            onChanged: onChange,
+          const SizedBox(height: 5),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade400),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<LocationItem>(
+                isExpanded: true,
+                value: currentVal,
+                hint: Text("Seleccione $label"),
+                items: items
+                    .map(
+                      (item) => DropdownMenuItem(
+                        value: item,
+                        child: Text(item.nombre),
+                      ),
+                    )
+                    .toList(),
+                onChanged: onChange,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
+  // --- WIDGET PARA CAMPOS DE PRECIO ---
   Widget _buildPriceField(String hint, TextEditingController controller) {
     return Expanded(
       child: TextField(
         controller: controller,
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
-          hintText: hint,
-          prefixIcon: const Icon(
-            Icons.attach_money,
-            color: AppColors.primaryBlue,
-            size: 20,
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 10),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          labelText: hint,
+          prefixIcon: const Icon(Icons.attach_money, size: 20),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
         ),
       ),
     );
