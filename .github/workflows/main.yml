@@ -1,0 +1,26 @@
+name: Airchannel Build & Release
+
+on:
+  push:
+    branches: [ "main" ] # Se activa cada vez que subes algo a la rama main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: airchannel-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'dart:developer' as dev; // Para logs profesionales
+import 'dart:developer' as dev;
 import '../utils/app_colors.dart';
 import '../services/api_service.dart';
 import '../models/location_model.dart';
+import '../models/propiedad_model.dart'; // Nuevo
+import 'results_screen.dart'; // Nuevo
 
 class FilterScreen extends StatefulWidget {
   const FilterScreen({super.key});
@@ -42,7 +44,6 @@ class _FilterScreenState extends State<FilterScreen> {
     _cargarDatosIniciales();
   }
 
-  // Carga lo que no depende de otros filtros al iniciar
   void _cargarDatosIniciales() async {
     try {
       final results = await Future.wait([
@@ -71,7 +72,7 @@ class _FilterScreenState extends State<FilterScreen> {
     setState(() {
       estados = data;
       selectedEstado = null;
-      selectedCiudad = null; // Reiniciamos los hijos
+      selectedCiudad = null;
     });
   }
 
@@ -133,7 +134,6 @@ class _FilterScreenState extends State<FilterScreen> {
             ),
             const SizedBox(height: 20),
 
-            // --- UBICACIÓN ---
             _buildDropdown("País", paises, selectedPais, (val) {
               setState(() => selectedPais = val);
               if (val != null) _cargarEstados(val.id);
@@ -165,7 +165,6 @@ class _FilterScreenState extends State<FilterScreen> {
 
             const Divider(height: 40),
 
-            // --- TIPO Y OPERACIÓN ---
             _buildDropdown("Tipo de Propiedad", tiposPropiedad, selectedTipo, (
               val,
             ) {
@@ -178,7 +177,6 @@ class _FilterScreenState extends State<FilterScreen> {
 
             const SizedBox(height: 20),
 
-            // --- PRECIOS ---
             const Text(
               "Rango de Precio",
               style: TextStyle(
@@ -197,7 +195,6 @@ class _FilterScreenState extends State<FilterScreen> {
 
             const SizedBox(height: 40),
 
-            // --- BOTÓN ---
             SizedBox(
               width: double.infinity,
               height: 55,
@@ -210,14 +207,34 @@ class _FilterScreenState extends State<FilterScreen> {
                 ),
                 onPressed: () {
                   dev.log(
-                    "Buscando en: ${selectedPais?.nombre}",
+                    "Navegando a resultados...",
                     name: "Airchannel.Filtros",
                   );
-                  dev.log(
-                    "Mín: ${_minPriceController.text} - Máx: ${_maxPriceController.text}",
-                    name: "Airchannel.Filtros",
+
+                  // Simulación de datos para probar la pantalla de resultados
+                  // En el futuro, aquí llamarás a tu API de búsqueda real
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ResultsScreen(
+                        propiedades: [
+                          Propiedad(
+                            id: 1,
+                            titulo: "Propiedad de Ejemplo",
+                            descripcion: "Esta es una vista previa",
+                            precio: _minPriceController.text.isEmpty
+                                ? "0"
+                                : _minPriceController.text,
+                            imagenUrl:
+                                "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2",
+                            ciudad:
+                                selectedCiudad?.nombre ??
+                                "Ubicación seleccionada",
+                          ),
+                        ],
+                      ),
+                    ),
                   );
-                  // Navegación a resultados próximamente...
                 },
                 child: const Text(
                   "MOSTRAR PROPIEDADES",
