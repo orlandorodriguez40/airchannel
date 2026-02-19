@@ -1,43 +1,46 @@
-name: Flutter Build CI
+name: Airchannel Build & Release
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [ "main" ] # Se activa cada vez que subes algo a la rama main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4 # Actualizado de v3 a v4
+      # 1. Descarga el código de tu repositorio (v4 es la versión actual)
+      - uses: actions/checkout@v4
 
-      - name: Install Java
-        uses: actions/setup-java@v4 # Actualizado de v3 a v4
+      # 2. Configura Java (Indispensable para compilar Android)
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Install Flutter
-        uses: subosito/flutter-action@v2
+      # 3. Configura Flutter (v2 de la acción, usando el canal estable)
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
           channel: 'stable'
-
-      - name: Get dependencies
+          cache: true # Esto hace que las siguientes veces sea más rápido
+      
+      # 4. Instala las librerías (http, provider, etc.)
+      - name: Install dependencies
         run: flutter pub get
 
+      # 5. Genera el instalador APK
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Build AppBundle (AAB)
+      # 6. Genera el Bundle AAB (El que pide Google Play)
+      - name: Build AppBundle
         run: flutter build appbundle --release
 
+      # 7. Sube los archivos a GitHub (v4 para evitar el error que tenías)
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4 # <--- ESTE ERA EL ERROR (Actualizado de v3 a v4)
+        uses: actions/upload-artifact@v4
         with:
-          name: release-assets
+          name: airchannel-release-files
           path: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
