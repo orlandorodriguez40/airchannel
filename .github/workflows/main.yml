@@ -30,13 +30,16 @@ jobs:
       - name: Build AppBundle
         run: flutter build appbundle --release
 
-      # CAMBIO AQUÍ: Usamos un comodín para asegurar que capture los archivos
-      # y forzamos que se suban incluso si hay advertencias.
+      # PASO CLAVE: Movemos todo a una carpeta limpia para que GitHub lo comprima junto
+      - name: Prepare Files for Upload
+        run: |
+          mkdir -p release_files
+          cp build/app/outputs/flutter-apk/app-release.apk release_files/
+          cp build/app/outputs/bundle/release/app-release.aab release_files/
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: airchannel-release-files
-          path: |
-            build/app/outputs/flutter-apk/*.apk
-            build/app/outputs/bundle/release/*.aab
-          if-no-files-found: error # Si no encuentra los archivos, te avisará por qué
+          name: Airchannel-Installers # Este será el nombre del ZIP
+          path: release_files/        # Subimos la carpeta completa
+          if-no-files-found: error
