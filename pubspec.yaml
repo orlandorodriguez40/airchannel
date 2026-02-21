@@ -1,9 +1,7 @@
 name: airchannel
 description: "A new Flutter project."
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 version: 1.0.0+1
-
-provider: ^6.1.1
 
 environment:
   sdk: ^3.10.7
@@ -13,24 +11,24 @@ dependencies:
     sdk: flutter
   http: ^1.1.0  
   provider: ^6.1.1
-
   cupertino_icons: ^1.0.8
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
-  
 
-flutter:
-
-  uses-material-design: true
-
+# Configuración del Icono de la App
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon.png"
-  adaptive_icon_background: "#318CE7" # El fondo azul
-  adaptive_icon_foreground: "assets/icon.png" # El icono de la casa
+  image_path: "assets/logo-comp.png" # Usamos tu logo como icono principal
+  adaptive_icon_background: "#050505" # Fondo negro para que resalte el dorado
+  adaptive_icon_foreground: "assets/logo-comp.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo-comp.png

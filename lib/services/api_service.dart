@@ -6,6 +6,34 @@ import 'dart:developer' as dev; // Importamos el framework de logging
 class ApiService {
   static const String baseUrl = "https://airchannel.a-stats.com/api";
 
+  // Busca el método login dentro de ApiService y modifícalo así:
+  Future<Map<String, dynamic>?> login(String username, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': username, // Cambiado de 'email' a 'username'
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        dev.log(
+          "Error de login: ${response.statusCode}",
+          name: "ApiService.login",
+        );
+        return null;
+      }
+    } catch (e) {
+      dev.log("Excepción en login: $e", name: "ApiService.login", error: e);
+      return null;
+    }
+  }
+
+  // --- MÉTODO FETCHDATA (EXISTENTE) ---
   Future<List<LocationItem>> fetchData(String endpoint) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/$endpoint'));
@@ -26,7 +54,6 @@ class ApiService {
         return [];
       }
     } catch (e) {
-      // Usamos dev.log en lugar de print
       dev.log(
         "Error en fetchData ($endpoint): $e",
         name: "ApiService",
