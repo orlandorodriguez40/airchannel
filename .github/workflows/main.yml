@@ -2,45 +2,41 @@ name: Airchannel Build & Release
 
 on:
   push:
-    branches: [ "main" ] # Se activa cada vez que subes algo a la rama main
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # 1. Descarga el código de tu repositorio (v4 es la versión actual)
       - uses: actions/checkout@v4
 
-      # 2. Configura Java (Indispensable para compilar Android)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      # 3. Configura Flutter (v2 de la acción, usando el canal estable)
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: true # Esto hace que las siguientes veces sea más rápido
+          cache: true
       
-      # 4. Instala las librerías (http, provider, etc.)
       - name: Install dependencies
         run: flutter pub get
 
-      # 5. Genera el instalador APK
       - name: Build APK
         run: flutter build apk --release
 
-      # 6. Genera el Bundle AAB (El que pide Google Play)
       - name: Build AppBundle
         run: flutter build appbundle --release
 
-      # 7. Sube los archivos a GitHub (v4 para evitar el error que tenías)
+      # CAMBIO AQUÍ: Usamos un comodín para asegurar que capture los archivos
+      # y forzamos que se suban incluso si hay advertencias.
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: airchannel-release-files
           path: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
+          if-no-files-found: error # Si no encuentra los archivos, te avisará por qué
