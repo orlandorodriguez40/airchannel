@@ -24,22 +24,25 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # PASO ADICIONAL: Genera los iconos de la app antes de compilar
+      - name: Generate Launcher Icons
+        run: flutter pub run flutter_launcher_icons
+
       - name: Build APK
         run: flutter build apk --release
 
       - name: Build AppBundle
         run: flutter build appbundle --release
 
-      # PASO CLAVE: Movemos todo a una carpeta limpia para que GitHub lo comprima junto
-      - name: Prepare Files for Upload
+      # COMPRESIÓN MANUAL: Crea un ZIP real para evitar errores de descarga
+      - name: Create ZIP Archive
         run: |
-          mkdir -p release_files
-          cp build/app/outputs/flutter-apk/app-release.apk release_files/
-          cp build/app/outputs/bundle/release/app-release.aab release_files/
+          zip -j Airchannel_Installers.zip \
+          build/app/outputs/flutter-apk/app-release.apk \
+          build/app/outputs/bundle/release/app-release.aab
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Airchannel-Installers # Este será el nombre del ZIP
-          path: release_files/        # Subimos la carpeta completa
-          if-no-files-found: error
+          name: Airchannel-Release-Package
+          path: Airchannel_Installers.zip
