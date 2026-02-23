@@ -24,11 +24,11 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/logo-comp.png" # Usamos tu logo como icono principal
+  image_path: "assets/logotipo_sin_fondo_opt.png" # Usamos tu logo como icono principal
   adaptive_icon_background: "#050505" # Fondo negro para que resalte el dorado
-  adaptive_icon_foreground: "assets/logo-comp.png"
+  adaptive_icon_foreground: "assets/logotipo_sin_fondo_opt.png"
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/logo-comp.png
+    - assets/logotipo_sin_fondo_opt.png
